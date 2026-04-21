@@ -67,6 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "CItyRUnawaykid.slnx",
+    "dotnet.defaultSolution": "CityRunawayKid.slnx",
     "dotnet.enableWorkspaceBasedDevelopment": false
 }
