@@ -6,9 +6,17 @@ public class TestCharController : MonoBehaviour
     public float moveSpeed = 10f;
     public float jumpForce = 10f;
     public float fallMultiplier = 2.5f;
+    public float groundCheckDistance = 0.6f;
+    public LayerMask groundLayer;
     private Rigidbody rb;
     private Vector3 moveDirection = Vector3.forward;
     private bool isGrounded;
+    private bool isJumping;
+    private bool isAirborne;
+    private float jumpBufferTime = 0.15f;
+    private float jumpBufferCounter;
+    private float coyoteTime = 0.12f;
+    private float coyoteCounter;
 
     private void Start()
     {
@@ -17,51 +25,64 @@ public class TestCharController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer);
+
+        if (isGrounded && !isAirborne)
+            coyoteCounter = coyoteTime;
+        else
+            coyoteCounter -= Time.deltaTime;
+
+        if (Input.GetKeyDown(KeyCode.Space))
+            jumpBufferCounter = jumpBufferTime;
+
+        if (jumpBufferCounter > 0f)
+            jumpBufferCounter -= Time.deltaTime;
+
+        if (jumpBufferCounter > 0f && coyoteCounter > 0f)
         {
-            isGrounded = false;
-            rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+            isJumping = true;
+            isAirborne = true;
+            jumpBufferCounter = 0f;
+            coyoteCounter = 0f;
         }
     }
 
     void FixedUpdate()
     {
-        // Freeze all rotation always to prevent wall bump spinning
-        rb.constraints = isGrounded
-            ? RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ
-            : RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+        rb.constraints = isAirborne
+            ? RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ
+            : RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
 
-        // Apply extra gravity when falling for a natural arc
-        if (rb.linearVelocity.y < 0)
+        if (isJumping)
         {
-            rb.linearVelocity += Vector3.up * Physics.gravity.y * fallMultiplier * Time.fixedDeltaTime;
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+            isJumping = false;
         }
 
-        // Always move forward
-        moveDirection = Vector3.forward;
+        if (rb.linearVelocity.y < 0)
+            rb.linearVelocity += Vector3.up * Physics.gravity.y * fallMultiplier * Time.fixedDeltaTime;
 
-        // Add left/right movement based on input
+        if (isAirborne && isGrounded && rb.linearVelocity.y <= 0)
+            isAirborne = false;
+
+        moveDirection = Vector3.forward;
         if (Input.GetKey(KeyCode.A)) moveDirection += Vector3.left;
         if (Input.GetKey(KeyCode.D)) moveDirection += Vector3.right;
 
-        // Apply horizontal velocity while preserving gravity (Y velocity)
         Vector3 velocity = rb.linearVelocity;
         velocity.x = moveDirection.x * moveSpeed;
         velocity.z = moveDirection.z * moveSpeed;
+
+        if (!isAirborne && velocity.y > 0 && velocity.y < 1f)
+            velocity.y = 0f;
+
         rb.linearVelocity = velocity;
     }
 
-    private void OnCollisionStay(Collision col)
+    private void OnDrawGizmos()
     {
-        if (col.gameObject.CompareTag("Ground"))
-            isGrounded = true;
-    }
-
-    private void OnCollisionExit(Collision col)
-    {
-        if (col.gameObject.CompareTag("Ground"))
-            isGrounded = false;
+        Gizmos.color = isGrounded ? Color.green : Color.red;
+        Gizmos.DrawLine(transform.position, transform.position + Vector3.down * groundCheckDistance);
     }
 
     private void OnTriggerEnter(Collider col)
