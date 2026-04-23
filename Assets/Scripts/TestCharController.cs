@@ -3,7 +3,6 @@ using UnityEngine;
 public class TestCharController : MonoBehaviour
 {
     public SpawnerManager spawnerManager;
-    public float moveSpeed = 10f;
     public float jumpForce = 15f;
     public float fallMultiplier = 3.5f;
     public float upMultiplier = 2.5f;
@@ -21,6 +20,13 @@ public class TestCharController : MonoBehaviour
     private float coyoteTime = 0.12f;
     private float coyoteCounter;
 
+    [Header("Dive / Slam Down")]
+    public float diveForce = 30f;
+    private bool isDiving = false;
+
+    public float fallbackMoveSpeed = 10f;
+    private float moveSpeed => ScoreManager.Instance != null ? ScoreManager.Instance.CurrentSpeed : fallbackMoveSpeed;
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -33,7 +39,10 @@ public class TestCharController : MonoBehaviour
         isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer);
 
         if (isGrounded && !isAirborne)
+        {
             coyoteCounter = coyoteTime;
+            isDiving = false;
+        }
         else
             coyoteCounter -= Time.deltaTime;
 
@@ -49,6 +58,11 @@ public class TestCharController : MonoBehaviour
             isAirborne = true;
             jumpBufferCounter = 0f;
             coyoteCounter = 0f;
+        }
+
+        if ((Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) && isAirborne && !isDiving)
+        {
+            isDiving = true;
         }
     }
 
@@ -66,12 +80,18 @@ public class TestCharController : MonoBehaviour
             isJumping = false;
         }
 
+        if (isDiving)
+        {
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, -diveForce, rb.linearVelocity.z);
+            isDiving = false;
+        }
+
         if (rb.linearVelocity.y > jumpForce)
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
 
         if (rb.linearVelocity.y < 0)
             rb.linearVelocity += Vector3.up * Physics.gravity.y * fallMultiplier * Time.fixedDeltaTime;
-        else if (rb.linearVelocity.y > 0 && isAirborne)
+        else if (rb.linearVelocity.y > 0 && isAirborne && !isDiving)
             rb.linearVelocity += Vector3.up * Physics.gravity.y * upMultiplier * Time.fixedDeltaTime;
 
         if (isAirborne && isGrounded && rb.linearVelocity.y <= 0.1f)
@@ -100,6 +120,13 @@ public class TestCharController : MonoBehaviour
     public void OnHitObstacle()
     {
         isDead = true;
+
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.StopScoring();
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnPlayerDied();
+
         rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
         rb.linearVelocity = Vector3.zero;
         rb.AddForce(Vector3.up * 6f, ForceMode.Impulse);
