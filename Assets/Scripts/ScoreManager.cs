@@ -65,7 +65,7 @@ public class ScoreManager : MonoBehaviour
     private void UpdateUI()
     {
         if (scoreText != null)
-            scoreText.text = Mathf.FloorToInt(currentScore).ToString("N0");
+            scoreText.text ="Score:"+ Mathf.FloorToInt(currentScore).ToString("N0");
 
         if (speedLevelText != null)
             speedLevelText.text = $"LVL {nextThresholdIndex + 1}";

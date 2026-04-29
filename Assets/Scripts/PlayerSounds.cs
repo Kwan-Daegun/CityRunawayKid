@@ -3,21 +3,22 @@ using UnityEngine;
 public class PlayerSounds : MonoBehaviour
 {
     [Header("Audio Sources")]
-    public AudioSource runningSoundSource;    
-    public AudioSource jumpSoundSource;       
-    public AudioSource landSoundSource;       
-    public AudioSource deathSoundSource;      
+    public AudioSource loopSource;
+    public AudioSource oneShotSource;
 
     [Header("Audio Clips")]
     public AudioClip runningClip;
     public AudioClip jumpClip;
     public AudioClip landClip;
     public AudioClip deathClip;
+    public AudioClip hitClip;           // Add this
 
     [Header("Settings")]
     public float runningVolume = 0.5f;
     public float jumpVolume = 0.8f;
     public float landVolume = 0.8f;
+    public float deathVolume = 1f;
+    public float hitVolume = 1f;        // Add this
 
     private TestCharController controller;
     private bool wasAirborne;
@@ -27,14 +28,13 @@ public class PlayerSounds : MonoBehaviour
     {
         controller = GetComponent<TestCharController>();
 
-        
-        if (runningSoundSource != null)
-        {
-            runningSoundSource.clip = runningClip;
-            runningSoundSource.loop = true;
-            runningSoundSource.volume = runningVolume;
-            runningSoundSource.playOnAwake = false;
-        }
+        loopSource.loop = true;
+        loopSource.playOnAwake = false;
+        loopSource.clip = runningClip;
+        loopSource.volume = runningVolume;
+
+        oneShotSource.loop = false;
+        oneShotSource.playOnAwake = false;
     }
 
     private void Update()
@@ -43,55 +43,48 @@ public class PlayerSounds : MonoBehaviour
 
         bool isAirborne = IsAirborne();
 
-        
         if (controller.isDead && !wasDead)
         {
-            StopRunning();
-            PlayOneShot(deathSoundSource, deathClip, 1f);
             wasDead = true;
+            loopSource.Stop();
+            PlayOneShot(deathClip, deathVolume);
             return;
         }
 
         if (controller.isDead) return;
 
-        
         if (isAirborne && !wasAirborne)
-        {
-            StopRunning();
-            PlayOneShot(jumpSoundSource, jumpClip, jumpVolume);
-        }
+            PlayOneShot(jumpClip, jumpVolume);
 
-        
         if (!isAirborne && wasAirborne)
-        {
-            PlayOneShot(landSoundSource, landClip, landVolume);
-        }
+            PlayOneShot(landClip, landVolume);
 
-        
         if (!isAirborne)
-            StartRunning();
+        {
+            if (!loopSource.isPlaying)
+                loopSource.Play();
+
+            loopSource.volume = Mathf.MoveTowards(loopSource.volume, runningVolume, Time.deltaTime * 4f);
+        }
         else
-            StopRunning();
+        {
+            loopSource.volume = Mathf.MoveTowards(loopSource.volume, 0f, Time.deltaTime * 8f);
+            if (loopSource.volume <= 0f && loopSource.isPlaying)
+                loopSource.Stop();
+        }
 
         wasAirborne = isAirborne;
     }
 
-    private void StartRunning()
+    public void PlayHitSound()
     {
-        if (runningSoundSource != null && !runningSoundSource.isPlaying)
-            runningSoundSource.Play();
+        PlayOneShot(hitClip, hitVolume);
     }
 
-    private void StopRunning()
+    private void PlayOneShot(AudioClip clip, float volume)
     {
-        if (runningSoundSource != null && runningSoundSource.isPlaying)
-            runningSoundSource.Stop();
-    }
-
-    private void PlayOneShot(AudioSource source, AudioClip clip, float volume)
-    {
-        if (source != null && clip != null)
-            source.PlayOneShot(clip, volume);
+        if (clip == null || oneShotSource == null) return;
+        oneShotSource.PlayOneShot(clip, volume);
     }
 
     private bool IsAirborne()

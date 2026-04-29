@@ -14,8 +14,11 @@ public class GameManager : MonoBehaviour
 
     [Header("Loading Screen")]
     public GameObject loadingPanel;
-    public Slider loadingBar;              
-    public TextMeshProUGUI loadingText;    
+    public Slider loadingBar;
+    public TextMeshProUGUI loadingText;
+
+    [Header("Scene Settings")]
+    public string mainMenuSceneName = "MainMenu";   // Match your main menu scene name exactly
 
     private void Awake()
     {
@@ -35,30 +38,53 @@ public class GameManager : MonoBehaviour
             losePanel.SetActive(true);
 
         if (finalScoreText != null && ScoreManager.Instance != null)
-            finalScoreText.text = "Score: " + Mathf.FloorToInt(ScoreManager.Instance.CurrentScore).ToString("N0");
+            finalScoreText.text = "Final Score: " + Mathf.FloorToInt(ScoreManager.Instance.CurrentScore).ToString("N0");
     }
 
     public void RestartGame()
     {
-        StartCoroutine(LoadSceneAsync());
+        StartCoroutine(LoadSceneAsync(SceneManager.GetActiveScene().buildIndex));
     }
 
-    private IEnumerator LoadSceneAsync()
+    public void GoToMainMenu()
     {
-        
+        StartCoroutine(LoadSceneAsync(mainMenuSceneName));
+    }
+
+    private IEnumerator LoadSceneAsync(int sceneIndex)
+    {
+        yield return StartCoroutine(ShowLoadingScreen());
+
+        AsyncOperation op = SceneManager.LoadSceneAsync(sceneIndex);
+        yield return StartCoroutine(RunLoadingBar(op));
+    }
+
+    private IEnumerator LoadSceneAsync(string sceneName)
+    {
+        yield return StartCoroutine(ShowLoadingScreen());
+
+        AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
+        yield return StartCoroutine(RunLoadingBar(op));
+    }
+
+    private IEnumerator ShowLoadingScreen()
+    {
         if (losePanel != null)
             losePanel.SetActive(false);
 
         if (loadingPanel != null)
             loadingPanel.SetActive(true);
 
-        
-        AsyncOperation op = SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex);
-        op.allowSceneActivation = false; 
+        yield return null;
+    }
+
+    private IEnumerator RunLoadingBar(AsyncOperation op)
+    {
+        op.allowSceneActivation = false;
 
         while (!op.isDone)
         {
-            float progress = Mathf.Clamp01(op.progress / 0.9f); 
+            float progress = Mathf.Clamp01(op.progress / 0.9f);
 
             if (loadingBar != null)
                 loadingBar.value = progress;
@@ -66,10 +92,9 @@ public class GameManager : MonoBehaviour
             if (loadingText != null)
                 loadingText.text = "Loading... " + Mathf.FloorToInt(progress * 100f) + "%";
 
-            
             if (op.progress >= 0.9f)
             {
-                yield return new WaitForSeconds(0.5f); 
+                yield return new WaitForSeconds(0.5f);
                 op.allowSceneActivation = true;
             }
 

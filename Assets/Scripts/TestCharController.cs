@@ -120,6 +120,9 @@ public class TestCharController : MonoBehaviour
     public void OnHitObstacle()
     {
         isDead = true;
+        PlayerSounds sounds = GetComponent<PlayerSounds>();
+        if (sounds != null)
+            sounds.PlayHitSound();
 
         if (ScoreManager.Instance != null)
             ScoreManager.Instance.StopScoring();
