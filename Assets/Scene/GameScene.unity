@@ -2126,6 +2126,15 @@ MonoBehaviour:
   - {fileID: 100010, guid: fc2b2b65264c13f48a615fa7dbc2ef24, type: 3}
   - {fileID: 100000, guid: 62125825e49febf4a89f76daf85d9ca7, type: 3}
   - {fileID: 100000, guid: 6458a4c9f91f22741a5064b5b7cfd892, type: 3}
+  flyingObstaclePrefabs:
+  - {fileID: 100000, guid: dac1a631b172e66469fb09e9987bcf57, type: 3}
+  - {fileID: 100000, guid: 9ec25066ec33fa84d9227e27c5f5a8a0, type: 3}
+  - {fileID: 100000, guid: dac1a631b172e66469fb09e9987bcf57, type: 3}
+  - {fileID: 100000, guid: 9ec25066ec33fa84d9227e27c5f5a8a0, type: 3}
+  - {fileID: 100000, guid: dac1a631b172e66469fb09e9987bcf57, type: 3}
+  flyingSpawnChance: 1
+  flyingHeight: 2.5
+  flyingUnlockScore: 1000
   spawnZ: 10
   minObstacles: 2
   maxObstacles: 4
@@ -2143,6 +2152,8 @@ GameObject:
   - component: {fileID: 1319061134}
   - component: {fileID: 1319061133}
   - component: {fileID: 1319061138}
+  - component: {fileID: 1319061139}
+  - component: {fileID: 1319061140}
   m_Layer: 0
   m_Name: Capsule
   m_TagString: Player
@@ -2295,6 +2306,48 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 112
   m_CollisionDetection: 1
+--- !u!114 &1319061139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1319061132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ac5dbaf3f48d3e4498c0a1f0aaadd7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  visualCapsule: {fileID: 1319061137}
+  controller: {fileID: 1319061133}
+  squashAmount: 0.6
+  stretchAmount: 1.3
+  squashSpeed: 10
+  tiltAmount: 15
+  tiltSpeed: 8
+--- !u!114 &1319061140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1319061132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5df7b36a9ba4c2646b01eaba41daac80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  runningSoundSource: {fileID: 0}
+  jumpSoundSource: {fileID: 0}
+  landSoundSource: {fileID: 0}
+  deathSoundSource: {fileID: 0}
+  runningClip: {fileID: 0}
+  jumpClip: {fileID: 0}
+  landClip: {fileID: 0}
+  deathClip: {fileID: 0}
+  runningVolume: 0.5
+  jumpVolume: 0.5
+  landVolume: 0.6
 --- !u!1 &1334795059 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 993018346520185202, guid: d3c0681d5de127a49bf22ae57b39bea1, type: 3}
@@ -2357,13 +2410,13 @@ MonoBehaviour:
   maxSpeed: 60
   speedIncreaseAmount: 10
   scoreThresholds:
-  - 100
-  - 250
-  - 500
-  - 750
-  - 1000
-  - 1500
-  - 2000
+  - 200
+  - 350
+  - 600
+  - 850
+  - 1100
+  - 1600
+  - 2200
   scoreText: {fileID: 1684968135}
   speedLevelText: {fileID: 997812281}
 --- !u!4 &1487820981
@@ -2748,6 +2801,7 @@ GameObject:
   - component: {fileID: 1609027302}
   - component: {fileID: 1609027301}
   - component: {fileID: 1609027304}
+  - component: {fileID: 1609027305}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2822,13 +2876,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1609027300}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.24200417, y: -0, z: -0, w: 0.9702753}
-  m_LocalPosition: {x: -0.39579678, y: 3.04, z: -4.91}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1319061137}
-  m_LocalEulerAnglesHint: {x: 28.01, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1609027304
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2873,6 +2927,21 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!114 &1609027305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1609027300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60774bcf1facda44b82e42cd86295171, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bobFrequency: 10
+  bobAmplitude: 0.05
+  bobSmoothing: 10
 --- !u!1 &1684968132
 GameObject:
   m_ObjectHideFlags: 0

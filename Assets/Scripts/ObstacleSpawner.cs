@@ -2,7 +2,16 @@ using UnityEngine;
 
 public class ObstacleSpawner : MonoBehaviour
 {
+    [Header("Ground Obstacles")]
     public GameObject[] obstaclePrefabs;
+
+    [Header("Flying Obstacles")]
+    public GameObject[] flyingObstaclePrefabs;
+    public float flyingSpawnChance = 0.4f;
+    public float flyingHeight = 2.5f;
+    public float flyingUnlockScore = 500f;      // Set this in Inspector to whatever you want
+
+    [Header("Spawn Settings")]
     public float spawnZ = 20f;
     public int minObstacles = 1;
     public int maxObstacles = 3;
@@ -11,16 +20,29 @@ public class ObstacleSpawner : MonoBehaviour
 
     public void SpawnObstaclesOnRoad(GameObject road)
     {
+        // Spawn ground obstacles
         int count = Random.Range(minObstacles, maxObstacles + 1);
-        
         int[] shuffledLanes = ShuffleLanes();
-        
+
         for (int i = 0; i < count; i++)
         {
             GameObject prefab = obstaclePrefabs[Random.Range(0, obstaclePrefabs.Length)];
             float x = lanePositions[shuffledLanes[i]];
             Vector3 spawnPos = new Vector3(x, road.transform.position.y + 1f, road.transform.position.z + spawnZ);
             Instantiate(prefab, spawnPos, Quaternion.identity);
+        }
+
+        // Only spawn flying obstacles after the unlock score is reached
+        bool flyingUnlocked = ScoreManager.Instance != null
+            && ScoreManager.Instance.CurrentScore >= flyingUnlockScore;
+
+        if (flyingUnlocked && flyingObstaclePrefabs != null && flyingObstaclePrefabs.Length > 0
+            && Random.value <= flyingSpawnChance)
+        {
+            GameObject flyingPrefab = flyingObstaclePrefabs[Random.Range(0, flyingObstaclePrefabs.Length)];
+            float x = lanePositions[Random.Range(0, lanePositions.Length)];
+            Vector3 flyPos = new Vector3(x, road.transform.position.y + flyingHeight, road.transform.position.z + spawnZ);
+            Instantiate(flyingPrefab, flyPos, Quaternion.identity);
         }
     }
 
