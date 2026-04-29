@@ -6,18 +6,18 @@ public class ScoreManager : MonoBehaviour
     public static ScoreManager Instance { get; private set; }
 
     [Header("Score Settings")]
-    public float pointsPerSecond = 10f;         // Base score rate
-    public float scoreMultiplier = 1f;           // Can be boosted later
+    public float pointsPerSecond = 10f;         
+    public float scoreMultiplier = 1f;           
 
     [Header("Speed Settings")]
-    public float baseSpeed = 10f;               // Starting move speed
-    public float maxSpeed = 30f;                // Speed cap
-    public float speedIncreaseAmount = 2f;      // How much speed increases per threshold
+    public float baseSpeed = 10f;               
+    public float maxSpeed = 30f;                
+    public float speedIncreaseAmount = 2f;      
     public float[] scoreThresholds = { 100f, 250f, 500f, 1000f, 2000f, 3500f, 5000f };
 
     [Header("UI")]
     public TextMeshProUGUI scoreText;
-    public TextMeshProUGUI speedLevelText;      // Optional: shows current speed tier
+    public TextMeshProUGUI speedLevelText;      
 
     private float currentScore = 0f;
     private float currentSpeed;

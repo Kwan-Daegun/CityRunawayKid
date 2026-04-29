@@ -14,8 +14,8 @@ public class GameManager : MonoBehaviour
 
     [Header("Loading Screen")]
     public GameObject loadingPanel;
-    public Slider loadingBar;              // Optional progress bar
-    public TextMeshProUGUI loadingText;    // Optional "Loading... 64%" text
+    public Slider loadingBar;              
+    public TextMeshProUGUI loadingText;    
 
     private void Awake()
     {
@@ -45,20 +45,20 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator LoadSceneAsync()
     {
-        // Hide lose panel, show loading screen
+        
         if (losePanel != null)
             losePanel.SetActive(false);
 
         if (loadingPanel != null)
             loadingPanel.SetActive(true);
 
-        // Begin loading the scene in the background
+        
         AsyncOperation op = SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex);
-        op.allowSceneActivation = false; // Hold scene until fully loaded
+        op.allowSceneActivation = false; 
 
         while (!op.isDone)
         {
-            float progress = Mathf.Clamp01(op.progress / 0.9f); // Unity caps at 0.9 before activation
+            float progress = Mathf.Clamp01(op.progress / 0.9f); 
 
             if (loadingBar != null)
                 loadingBar.value = progress;
@@ -66,10 +66,10 @@ public class GameManager : MonoBehaviour
             if (loadingText != null)
                 loadingText.text = "Loading... " + Mathf.FloorToInt(progress * 100f) + "%";
 
-            // Once fully loaded, activate the scene
+            
             if (op.progress >= 0.9f)
             {
-                yield return new WaitForSeconds(0.5f); // Brief pause so loading screen doesn't flash
+                yield return new WaitForSeconds(0.5f); 
                 op.allowSceneActivation = true;
             }
 

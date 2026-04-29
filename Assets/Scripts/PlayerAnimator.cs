@@ -65,10 +65,10 @@ public class PlayerAnimator : MonoBehaviour
 
         wasAirborne = isAirborne;
 
-        // Ease target back toward original
+        
         targetScale = Vector3.Lerp(targetScale, originalScale, Time.deltaTime * squashSpeed);
 
-        // Visual scale chases target — double lerp = elastic feel
+        
         visualCapsule.localScale = Vector3.Lerp(
             visualCapsule.localScale,
             targetScale,
@@ -82,7 +82,7 @@ public class PlayerAnimator : MonoBehaviour
         if (Input.GetKey(KeyCode.A)) targetTilt = tiltAmount;
         if (Input.GetKey(KeyCode.D)) targetTilt = -tiltAmount;
 
-        // Smooth the tilt angle directly instead of lerping quaternions
+        
         currentTiltZ = Mathf.Lerp(currentTiltZ, targetTilt, Time.deltaTime * tiltSpeed);
 
         visualCapsule.localRotation = Quaternion.Euler(0f, 0f, currentTiltZ);

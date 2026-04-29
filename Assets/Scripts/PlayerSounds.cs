@@ -3,10 +3,10 @@ using UnityEngine;
 public class PlayerSounds : MonoBehaviour
 {
     [Header("Audio Sources")]
-    public AudioSource runningSoundSource;    // Looping running sound
-    public AudioSource jumpSoundSource;       // One shot jump sound
-    public AudioSource landSoundSource;       // One shot land sound
-    public AudioSource deathSoundSource;      // One shot death sound
+    public AudioSource runningSoundSource;    
+    public AudioSource jumpSoundSource;       
+    public AudioSource landSoundSource;       
+    public AudioSource deathSoundSource;      
 
     [Header("Audio Clips")]
     public AudioClip runningClip;
@@ -27,7 +27,7 @@ public class PlayerSounds : MonoBehaviour
     {
         controller = GetComponent<TestCharController>();
 
-        // Setup running audio source as looping
+        
         if (runningSoundSource != null)
         {
             runningSoundSource.clip = runningClip;
@@ -43,7 +43,7 @@ public class PlayerSounds : MonoBehaviour
 
         bool isAirborne = IsAirborne();
 
-        // Death sound
+        
         if (controller.isDead && !wasDead)
         {
             StopRunning();
@@ -54,20 +54,20 @@ public class PlayerSounds : MonoBehaviour
 
         if (controller.isDead) return;
 
-        // Jump sound — just left ground
+        
         if (isAirborne && !wasAirborne)
         {
             StopRunning();
             PlayOneShot(jumpSoundSource, jumpClip, jumpVolume);
         }
 
-        // Land sound — just hit ground
+        
         if (!isAirborne && wasAirborne)
         {
             PlayOneShot(landSoundSource, landClip, landVolume);
         }
 
-        // Running sound — on ground and alive
+        
         if (!isAirborne)
             StartRunning();
         else

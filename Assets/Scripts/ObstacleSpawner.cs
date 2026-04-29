@@ -9,7 +9,7 @@ public class ObstacleSpawner : MonoBehaviour
     public GameObject[] flyingObstaclePrefabs;
     public float flyingSpawnChance = 0.4f;
     public float flyingHeight = 2.5f;
-    public float flyingUnlockScore = 500f;      // Set this in Inspector to whatever you want
+    public float flyingUnlockScore = 500f;      
 
     [Header("Spawn Settings")]
     public float spawnZ = 20f;
@@ -20,7 +20,7 @@ public class ObstacleSpawner : MonoBehaviour
 
     public void SpawnObstaclesOnRoad(GameObject road)
     {
-        // Spawn ground obstacles
+        
         int count = Random.Range(minObstacles, maxObstacles + 1);
         int[] shuffledLanes = ShuffleLanes();
 
@@ -32,7 +32,7 @@ public class ObstacleSpawner : MonoBehaviour
             Instantiate(prefab, spawnPos, Quaternion.identity);
         }
 
-        // Only spawn flying obstacles after the unlock score is reached
+        
         bool flyingUnlocked = ScoreManager.Instance != null
             && ScoreManager.Instance.CurrentScore >= flyingUnlockScore;
 

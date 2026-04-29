@@ -8,7 +8,7 @@ public class SpawnerManager : MonoBehaviour
         roadSpawner = GetComponent<RoadSpawner>();
     }
 
-    // Update is called once per frame
+    
     void Update()
     {
         
