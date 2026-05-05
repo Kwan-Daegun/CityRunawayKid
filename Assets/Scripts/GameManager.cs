@@ -11,6 +11,10 @@ public class GameManager : MonoBehaviour
     [Header("UI")]
     public GameObject losePanel;
     public TextMeshProUGUI finalScoreText;
+    public GameObject PauseBtn;
+
+    [Header("Pause")]
+    public GameObject pausePanel;
 
     [Header("Loading Screen")]
     public GameObject loadingPanel;
@@ -18,7 +22,9 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI loadingText;
 
     [Header("Scene Settings")]
-    public string mainMenuSceneName = "MainMenu";   // Match your main menu scene name exactly
+    public string mainMenuSceneName = "MainMenu";
+
+    private bool isPaused = false;
 
     private void Awake()
     {
@@ -28,12 +34,55 @@ public class GameManager : MonoBehaviour
         if (losePanel != null)
             losePanel.SetActive(false);
 
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
+
         if (loadingPanel != null)
             loadingPanel.SetActive(false);
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+            TogglePause();
+    }
+
+    public void TogglePause()
+    {
+        if (isPaused) Resume();
+        else Pause();
+    }
+
+   public void Pause()
+{
+    isPaused = true;
+    Time.timeScale = 0f;
+    PauseBtn.SetActive(false);
+    AudioListener.pause = true;
+
+    if (pausePanel != null)
+        pausePanel.SetActive(true);
+
+    
+        
+}
+
+    public void Resume()
+{
+    isPaused = false;
+    Time.timeScale = 1f;
+    PauseBtn.SetActive(true);
+    AudioListener.pause = false;
+
+    if (pausePanel != null)
+        pausePanel.SetActive(false);
+
+}
+
     public void OnPlayerDied()
     {
+        if(PauseBtn != null)
+            PauseBtn.SetActive(false);
         if (losePanel != null)
             losePanel.SetActive(true);
 
@@ -43,18 +92,19 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
+        Time.timeScale = 1f;
         StartCoroutine(LoadSceneAsync(SceneManager.GetActiveScene().buildIndex));
     }
 
     public void GoToMainMenu()
     {
+        Time.timeScale = 1f;
         StartCoroutine(LoadSceneAsync(mainMenuSceneName));
     }
 
     private IEnumerator LoadSceneAsync(int sceneIndex)
     {
         yield return StartCoroutine(ShowLoadingScreen());
-
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneIndex);
         yield return StartCoroutine(RunLoadingBar(op));
     }
@@ -62,7 +112,6 @@ public class GameManager : MonoBehaviour
     private IEnumerator LoadSceneAsync(string sceneName)
     {
         yield return StartCoroutine(ShowLoadingScreen());
-
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         yield return StartCoroutine(RunLoadingBar(op));
     }
@@ -71,6 +120,9 @@ public class GameManager : MonoBehaviour
     {
         if (losePanel != null)
             losePanel.SetActive(false);
+
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
 
         if (loadingPanel != null)
             loadingPanel.SetActive(true);

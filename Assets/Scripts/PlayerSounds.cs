@@ -11,14 +11,14 @@ public class PlayerSounds : MonoBehaviour
     public AudioClip jumpClip;
     public AudioClip landClip;
     public AudioClip deathClip;
-    public AudioClip hitClip;           // Add this
+    public AudioClip hitClip;
 
     [Header("Settings")]
     public float runningVolume = 0.5f;
     public float jumpVolume = 0.8f;
     public float landVolume = 0.8f;
     public float deathVolume = 1f;
-    public float hitVolume = 1f;        // Add this
+    public float hitVolume = 1f;
 
     private TestCharController controller;
     private bool wasAirborne;
@@ -80,6 +80,8 @@ public class PlayerSounds : MonoBehaviour
     {
         PlayOneShot(hitClip, hitVolume);
     }
+
+    
 
     private void PlayOneShot(AudioClip clip, float volume)
     {
