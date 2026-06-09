@@ -6,25 +6,32 @@ public class ScoreManager : MonoBehaviour
     public static ScoreManager Instance { get; private set; }
 
     [Header("Score Settings")]
-    public float pointsPerSecond = 10f;         
-    public float scoreMultiplier = 1f;           
+    public float pointsPerSecond = 10f;
+    [HideInInspector] public float scoreMultiplier = 1f;
 
     [Header("Speed Settings")]
-    public float baseSpeed = 10f;               
-    public float maxSpeed = 30f;                
-    public float speedIncreaseAmount = 2f;      
+    public float baseSpeed = 10f;
+    public float maxSpeed = 30f;
+    public float speedIncreaseAmount = 2f;
     public float[] scoreThresholds = { 100f, 250f, 500f, 1000f, 2000f, 3500f, 5000f };
 
     [Header("UI")]
     public TextMeshProUGUI scoreText;
-    public TextMeshProUGUI speedLevelText;      
+    public TextMeshProUGUI speedLevelText;
 
     private float currentScore = 0f;
     private float currentSpeed;
     private int nextThresholdIndex = 0;
     private bool isRunning = false;
 
-    public float CurrentSpeed => currentSpeed;
+    [HideInInspector] public bool speedBoostActive = false;
+    [HideInInspector] public float speedBoostMultiplier = 1f;
+
+    // Single CurrentSpeed definition with boost support
+    public float CurrentSpeed => speedBoostActive
+        ? currentSpeed * speedBoostMultiplier
+        : currentSpeed;
+
     public float CurrentScore => currentScore;
 
     private void Awake()
@@ -57,7 +64,6 @@ public class ScoreManager : MonoBehaviour
         {
             currentSpeed = Mathf.Min(currentSpeed + speedIncreaseAmount, maxSpeed);
             nextThresholdIndex++;
-
             Debug.Log($"Speed increased to {currentSpeed}! (Threshold {nextThresholdIndex})");
         }
     }
@@ -65,7 +71,7 @@ public class ScoreManager : MonoBehaviour
     private void UpdateUI()
     {
         if (scoreText != null)
-            scoreText.text ="Score:"+ Mathf.FloorToInt(currentScore).ToString("N0");
+            scoreText.text = "Score:" + Mathf.FloorToInt(currentScore).ToString("N0");
 
         if (speedLevelText != null)
             speedLevelText.text = $"LVL {nextThresholdIndex + 1}";

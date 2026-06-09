@@ -19,6 +19,8 @@ public class TestCharController : MonoBehaviour
     private float jumpBufferCounter;
     private float coyoteTime = 0.12f;
     private float coyoteCounter;
+    private float landCooldown = 0f;
+    private float landCooldownTime = 0.1f;
 
     [Header("Dive / Slam Down")]
     public float diveForce = 30f;
@@ -32,39 +34,44 @@ public class TestCharController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
     }
 
-    void Update()
+    private void Update()
+{
+    if (isDead) return;
+
+    bool antiGrav = AntiGravityManager.Instance != null && AntiGravityManager.Instance.IsAntiGravity;
+
+    // Flip ground check direction based on gravity
+    Vector3 gravityDir = antiGrav ? Vector3.up : Vector3.down;
+    isGrounded = Physics.Raycast(transform.position, gravityDir, groundCheckDistance, groundLayer);
+
+    if (isGrounded && !isAirborne)
     {
-        if (isDead) return;
-
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer);
-
-        if (isGrounded && !isAirborne)
-        {
-            coyoteCounter = coyoteTime;
-            isDiving = false;
-        }
-        else
-            coyoteCounter -= Time.deltaTime;
-
-        if (Input.GetKeyDown(KeyCode.Space))
-            jumpBufferCounter = jumpBufferTime;
-
-        if (jumpBufferCounter > 0f)
-            jumpBufferCounter -= Time.deltaTime;
-
-        if (jumpBufferCounter > 0f && coyoteCounter > 0f && !isAirborne)
-        {
-            isJumping = true;
-            isAirborne = true;
-            jumpBufferCounter = 0f;
-            coyoteCounter = 0f;
-        }
-
-        if ((Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) && isAirborne && !isDiving)
-        {
-            isDiving = true;
-        }
+        coyoteCounter = coyoteTime;
+        isDiving = false;
     }
+    else
+        coyoteCounter -= Time.deltaTime;
+
+    if (landCooldown > 0f)
+        landCooldown -= Time.deltaTime;
+
+    if (Input.GetKeyDown(KeyCode.Space))
+        jumpBufferCounter = jumpBufferTime;
+
+    if (jumpBufferCounter > 0f)
+        jumpBufferCounter -= Time.deltaTime;
+
+    if (jumpBufferCounter > 0f && coyoteCounter > 0f && !isAirborne && landCooldown <= 0f)
+    {
+        isJumping = true;
+        isAirborne = true;
+        jumpBufferCounter = 0f;
+        coyoteCounter = 0f;
+    }
+
+    if ((Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) && isAirborne && !isDiving)
+        isDiving = true;
+}
 
     void FixedUpdate()
     {
@@ -97,6 +104,7 @@ public class TestCharController : MonoBehaviour
         if (isAirborne && isGrounded && rb.linearVelocity.y <= 0.1f)
         {
             isAirborne = false;
+            landCooldown = landCooldownTime;
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         }
 
@@ -118,22 +126,27 @@ public class TestCharController : MonoBehaviour
     }
 
     public void OnHitObstacle()
-    {
-        isDead = true;
-        PlayerSounds sounds = GetComponent<PlayerSounds>();
-        if (sounds != null)
-            sounds.PlayHitSound();
+{
+    // Don't die if invincible
+    if (PowerUpManager.Instance != null && PowerUpManager.Instance.IsInvincible)
+        return;
 
-        if (ScoreManager.Instance != null)
-            ScoreManager.Instance.StopScoring();
+    isDead = true;
 
-        if (GameManager.Instance != null)
-            GameManager.Instance.OnPlayerDied();
+    PlayerSounds sounds = GetComponent<PlayerSounds>();
+    if (sounds != null)
+        sounds.PlayHitSound();
 
-        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
-        rb.linearVelocity = Vector3.zero;
-        rb.AddForce(Vector3.up * 6f, ForceMode.Impulse);
-    }
+    if (ScoreManager.Instance != null)
+        ScoreManager.Instance.StopScoring();
+
+    if (GameManager.Instance != null)
+        GameManager.Instance.OnPlayerDied();
+
+    rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+    rb.linearVelocity = Vector3.zero;
+    rb.AddForce(Vector3.up * 6f, ForceMode.Impulse);
+}
 
     private void OnCollisionEnter(Collision col)
     {
