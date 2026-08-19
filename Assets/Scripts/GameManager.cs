@@ -57,7 +57,8 @@ public class GameManager : MonoBehaviour
 {
     isPaused = true;
     Time.timeScale = 0f;
-    PauseBtn.SetActive(false);
+    if (PauseBtn != null)
+        PauseBtn.SetActive(false);
     AudioListener.pause = true;
 
     if (pausePanel != null)
@@ -71,7 +72,8 @@ public class GameManager : MonoBehaviour
 {
     isPaused = false;
     Time.timeScale = 1f;
-    PauseBtn.SetActive(true);
+    if (PauseBtn != null)
+        PauseBtn.SetActive(true);
     AudioListener.pause = false;
 
     if (pausePanel != null)
@@ -93,12 +95,22 @@ public class GameManager : MonoBehaviour
     public void RestartGame()
     {
         Time.timeScale = 1f;
+        AudioListener.pause = false;
+
+        if (AntiGravityManager.Instance != null)
+            AntiGravityManager.Instance.ResetWorldGravity();
+
         StartCoroutine(LoadSceneAsync(SceneManager.GetActiveScene().buildIndex));
     }
 
     public void GoToMainMenu()
     {
         Time.timeScale = 1f;
+        AudioListener.pause = false;
+
+        if (AntiGravityManager.Instance != null)
+            AntiGravityManager.Instance.ResetWorldGravity();
+
         StartCoroutine(LoadSceneAsync(mainMenuSceneName));
     }
 

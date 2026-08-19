@@ -25,6 +25,15 @@ public class TutorialManager : MonoBehaviour
         dismissed = true;
         Time.timeScale = 1f;
         AudioListener.pause = false;
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            TestCharController controller = player.GetComponent<TestCharController>();
+            if (controller != null)
+                controller.SuppressInput(0.1f);
+        }
+
         Destroy(tutorialPanel);
     }
 

@@ -57,6 +57,18 @@ public class PowerUpManager : MonoBehaviour
 
     private void Update()
     {
+        if (mainCamera == null) return;
+
+        // FOV based on current speed — wider as speed increases
+        if (!isBoosting)
+        {
+            float currentSpeed = ScoreManager.Instance != null ? ScoreManager.Instance.CurrentSpeed : 0f;
+            float maxSpeed = ScoreManager.Instance != null ? ScoreManager.Instance.maxSpeed : 30f;
+
+            float speedPercent = Mathf.Clamp01(currentSpeed / maxSpeed);
+            targetFOV = Mathf.Lerp(normalFOV, boostFOV, speedPercent);
+        }
+
         mainCamera.fieldOfView = Mathf.Lerp(
             mainCamera.fieldOfView,
             targetFOV,
@@ -93,6 +105,8 @@ public class PowerUpManager : MonoBehaviour
 
     private IEnumerator SpeedBoostCoroutine()
     {
+        if (ScoreManager.Instance == null) yield break;
+
         isBoosting = true;
         ScoreManager.Instance.speedBoostActive = true;
         ScoreManager.Instance.speedBoostMultiplier = boostMultiplier;
@@ -104,7 +118,6 @@ public class PowerUpManager : MonoBehaviour
 
         ScoreManager.Instance.speedBoostActive = false;
         ScoreManager.Instance.speedBoostMultiplier = 1f;
-        targetFOV = normalFOV;
         targetDistortion = normalDistortion;
 
         isBoosting = false;

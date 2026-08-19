@@ -27,10 +27,9 @@ public class ScoreManager : MonoBehaviour
     [HideInInspector] public bool speedBoostActive = false;
     [HideInInspector] public float speedBoostMultiplier = 1f;
 
-    // Single CurrentSpeed definition with boost support
     public float CurrentSpeed => speedBoostActive
-        ? currentSpeed * speedBoostMultiplier
-        : currentSpeed;
+    ? Mathf.Min(currentSpeed * speedBoostMultiplier, maxSpeed * 1.2f)
+    : currentSpeed;
 
     public float CurrentScore => currentScore;
 

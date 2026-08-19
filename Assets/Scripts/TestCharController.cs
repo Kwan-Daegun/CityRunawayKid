@@ -21,6 +21,7 @@ public class TestCharController : MonoBehaviour
     private float coyoteCounter;
     private float landCooldown = 0f;
     private float landCooldownTime = 0.1f;
+    private float inputSuppressedUntil = 0f;
 
     [Header("Dive / Slam Down")]
     public float diveForce = 30f;
@@ -35,47 +36,56 @@ public class TestCharController : MonoBehaviour
     }
 
     private void Update()
-{
-    if (isDead) return;
-
-    bool antiGrav = AntiGravityManager.Instance != null && AntiGravityManager.Instance.IsAntiGravity;
-
-    // Flip ground check direction based on gravity
-    Vector3 gravityDir = antiGrav ? Vector3.up : Vector3.down;
-    isGrounded = Physics.Raycast(transform.position, gravityDir, groundCheckDistance, groundLayer);
-
-    if (isGrounded && !isAirborne)
     {
-        coyoteCounter = coyoteTime;
-        isDiving = false;
+        if (isDead) return;
+        if (Time.timeScale == 0f)
+        {
+            ClearBufferedActions();
+            return;
+        }
+        if (Time.unscaledTime < inputSuppressedUntil)
+        {
+            ClearBufferedActions();
+            return;
+        }
+
+        isGrounded = Physics.Raycast(transform.position, gravityDown, groundCheckDistance, groundLayer);
+
+        if (isGrounded && !isAirborne)
+        {
+            coyoteCounter = coyoteTime;
+            isDiving = false;
+        }
+        else
+            coyoteCounter -= Time.deltaTime;
+
+        if (landCooldown > 0f)
+            landCooldown -= Time.deltaTime;
+
+        if (Input.GetKeyDown(KeyCode.Space))
+            jumpBufferCounter = jumpBufferTime;
+
+        if (jumpBufferCounter > 0f)
+            jumpBufferCounter -= Time.deltaTime;
+
+        if (jumpBufferCounter > 0f && coyoteCounter > 0f && !isAirborne && landCooldown <= 0f)
+        {
+            isJumping = true;
+            isAirborne = true;
+            jumpBufferCounter = 0f;
+            coyoteCounter = 0f;
+        }
+
+        if ((Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) && isAirborne && !isDiving)
+            isDiving = true;
     }
-    else
-        coyoteCounter -= Time.deltaTime;
-
-    if (landCooldown > 0f)
-        landCooldown -= Time.deltaTime;
-
-    if (Input.GetKeyDown(KeyCode.Space))
-        jumpBufferCounter = jumpBufferTime;
-
-    if (jumpBufferCounter > 0f)
-        jumpBufferCounter -= Time.deltaTime;
-
-    if (jumpBufferCounter > 0f && coyoteCounter > 0f && !isAirborne && landCooldown <= 0f)
-    {
-        isJumping = true;
-        isAirborne = true;
-        jumpBufferCounter = 0f;
-        coyoteCounter = 0f;
-    }
-
-    if ((Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) && isAirborne && !isDiving)
-        isDiving = true;
-}
 
     void FixedUpdate()
     {
         if (isDead) return;
+        if (Time.timeScale == 0f) return;
+
+        bool antiGrav = AntiGravityManager.Instance != null && AntiGravityManager.Instance.IsAntiGravity;
 
         rb.constraints = isAirborne
             ? RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ
@@ -83,25 +93,44 @@ public class TestCharController : MonoBehaviour
 
         if (isJumping)
         {
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+            float jumpDirection = antiGrav ? -jumpForce : jumpForce;
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpDirection, rb.linearVelocity.z);
             isJumping = false;
         }
 
         if (isDiving)
         {
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, -diveForce, rb.linearVelocity.z);
+            float diveDirection = antiGrav ? diveForce : -diveForce;
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, diveDirection, rb.linearVelocity.z);
             isDiving = false;
         }
 
-        if (rb.linearVelocity.y > jumpForce)
+        if (!antiGrav && rb.linearVelocity.y > jumpForce)
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
 
-        if (rb.linearVelocity.y < 0)
-            rb.linearVelocity += Vector3.up * Physics.gravity.y * fallMultiplier * Time.fixedDeltaTime;
-        else if (rb.linearVelocity.y > 0 && isAirborne && !isDiving)
-            rb.linearVelocity += Vector3.up * Physics.gravity.y * upMultiplier * Time.fixedDeltaTime;
+        if (antiGrav && rb.linearVelocity.y < -jumpForce)
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, -jumpForce, rb.linearVelocity.z);
 
-        if (isAirborne && isGrounded && rb.linearVelocity.y <= 0.1f)
+        if (!antiGrav)
+        {
+            if (rb.linearVelocity.y < 0)
+                rb.linearVelocity += Vector3.up * Physics.gravity.y * fallMultiplier * Time.fixedDeltaTime;
+            else if (rb.linearVelocity.y > 0 && isAirborne && !isDiving)
+                rb.linearVelocity += Vector3.up * Physics.gravity.y * upMultiplier * Time.fixedDeltaTime;
+        }
+        else
+        {
+            if (rb.linearVelocity.y > 0)
+                rb.linearVelocity += Vector3.up * Physics.gravity.y * fallMultiplier * Time.fixedDeltaTime;
+            else if (rb.linearVelocity.y < 0 && isAirborne && !isDiving)
+                rb.linearVelocity += Vector3.up * Physics.gravity.y * upMultiplier * Time.fixedDeltaTime;
+        }
+
+        bool movingTowardGround = antiGrav
+            ? rb.linearVelocity.y >= -0.1f
+            : rb.linearVelocity.y <= 0.1f;
+
+        if (isAirborne && isGrounded && movingTowardGround)
         {
             isAirborne = false;
             landCooldown = landCooldownTime;
@@ -116,7 +145,10 @@ public class TestCharController : MonoBehaviour
         velocity.x = moveDirection.x * moveSpeed;
         velocity.z = moveDirection.z * moveSpeed;
 
-        if (!isAirborne && velocity.y > 0 && velocity.y < 1f)
+        if (!isAirborne && !antiGrav && velocity.y > 0 && velocity.y < 1f)
+            velocity.y = 0f;
+
+        if (!isAirborne && antiGrav && velocity.y < 0 && velocity.y > -1f)
             velocity.y = 0f;
 
         if (!isAirborne && rb.linearVelocity.z < 1f)
@@ -125,28 +157,67 @@ public class TestCharController : MonoBehaviour
         rb.linearVelocity = velocity;
     }
 
+    public void ForceAirborne()
+    {
+        isAirborne = true;
+        isGrounded = false;
+        coyoteCounter = 0f;
+        landCooldown = landCooldownTime;
+    }
+
+    public void ClearBufferedActions()
+    {
+        isJumping = false;
+        isDiving = false;
+        jumpBufferCounter = 0f;
+        coyoteCounter = 0f;
+    }
+
+    public void SuppressInput(float seconds)
+    {
+        inputSuppressedUntil = Mathf.Max(inputSuppressedUntil, Time.unscaledTime + seconds);
+        ClearBufferedActions();
+    }
+
     public void OnHitObstacle()
-{
-    // Don't die if invincible
-    if (PowerUpManager.Instance != null && PowerUpManager.Instance.IsInvincible)
-        return;
+    {
+        if (PowerUpManager.Instance != null && PowerUpManager.Instance.IsInvincible)
+        {
+            if (ScoreManager.Instance != null)
+                ScoreManager.Instance.AddBonus(Random.Range(100f, 200f));
+            return;
+        }
 
-    isDead = true;
+        KillPlayer();
+    }
 
-    PlayerSounds sounds = GetComponent<PlayerSounds>();
-    if (sounds != null)
-        sounds.PlayHitSound();
+    public void OnHitGiantRock()
+    {
+        KillPlayer();
+    }
 
-    if (ScoreManager.Instance != null)
-        ScoreManager.Instance.StopScoring();
+    private void KillPlayer()
+    {
+        isDead = true;
 
-    if (GameManager.Instance != null)
-        GameManager.Instance.OnPlayerDied();
+        PlayerSounds sounds = GetComponent<PlayerSounds>();
+        if (sounds != null)
+            sounds.PlayHitSound();
 
-    rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
-    rb.linearVelocity = Vector3.zero;
-    rb.AddForce(Vector3.up * 6f, ForceMode.Impulse);
-}
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.StopScoring();
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnPlayerDied();
+
+        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+        rb.linearVelocity = Vector3.zero;
+        rb.AddForce(Vector3.up * 6f, ForceMode.Impulse);
+    }
+
+    private Vector3 gravityDown => AntiGravityManager.Instance != null && AntiGravityManager.Instance.IsAntiGravity
+        ? Vector3.up
+        : Vector3.down;
 
     private void OnCollisionEnter(Collision col)
     {
@@ -157,11 +228,12 @@ public class TestCharController : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = isGrounded ? Color.green : Color.red;
-        Gizmos.DrawLine(transform.position, transform.position + Vector3.down * groundCheckDistance);
+        Gizmos.DrawLine(transform.position, transform.position + gravityDown * groundCheckDistance);
     }
 
     private void OnTriggerEnter(Collider col)
     {
-        spawnerManager.SpawnTriggerEntered();
+        if (spawnerManager != null)
+            spawnerManager.SpawnTriggerEntered();
     }
 }

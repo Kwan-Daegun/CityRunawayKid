@@ -26,26 +26,37 @@ public class FirstPersonCamera : MonoBehaviour
 
     private void HandleCameraBob()
     {
+        bool antiGrav = AntiGravityManager.Instance != null && AntiGravityManager.Instance.IsAntiGravity;
         bool isAirborne = IsAirborne();
 
-        if (!isAirborne && !controller.isDead)
+        Vector3 baseHeadPos = antiGrav
+            ? new Vector3(originalLocalPos.x, -Mathf.Abs(originalLocalPos.y), originalLocalPos.z)
+            : originalLocalPos;
+
+        if (!isAirborne && controller != null && !controller.isDead)
         {
             bobTimer += Time.deltaTime * bobFrequency;
+
             float bobY = Mathf.Sin(bobTimer) * bobAmplitude;
             float bobX = Mathf.Sin(bobTimer * 0.5f) * bobAmplitude * 0.5f;
 
-            Vector3 targetPos = originalLocalPos + new Vector3(bobX, bobY, 0f);
+            if (antiGrav)
+                bobY *= -1f;
+
+            Vector3 targetPos = baseHeadPos + new Vector3(bobX, bobY, 0f);
             transform.localPosition = Vector3.Lerp(transform.localPosition, targetPos, Time.deltaTime * bobSmoothing);
         }
         else
         {
             bobTimer = 0f;
-            transform.localPosition = Vector3.Lerp(transform.localPosition, originalLocalPos, Time.deltaTime * bobSmoothing);
+            transform.localPosition = Vector3.Lerp(transform.localPosition, baseHeadPos, Time.deltaTime * bobSmoothing);
         }
     }
 
     private bool IsAirborne()
     {
+        if (controller == null) return false;
+
         return (bool)typeof(TestCharController)
             .GetField("isAirborne", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
             .GetValue(controller);

@@ -7,20 +7,14 @@ public class PowerUp : MonoBehaviour
     [Header("Settings")]
     public PowerUpType powerUpType = PowerUpType.SpeedBoost;
     public float rotateSpeed = 90f;
-    public float bobSpeed = 2f;
-    public float bobAmount = 0.3f;
 
-    private Vector3 startPos;
-
-    private void Start()
-    {
-        startPos = transform.position;
-    }
+    [Header("Sound")]
+    public AudioClip pickupSound;
+    public float pickupVolume = 1f;
 
     private void Update()
     {
         transform.Rotate(Vector3.up * rotateSpeed * Time.deltaTime);
-        transform.position = startPos + Vector3.up * Mathf.Sin(Time.time * bobSpeed) * bobAmount;
     }
 
     private void OnTriggerEnter(Collider col)
@@ -30,18 +24,31 @@ public class PowerUp : MonoBehaviour
         switch (powerUpType)
         {
             case PowerUpType.SpeedBoost:
-                PowerUpManager.Instance.ActivateSpeedBoost();
+                if (PowerUpManager.Instance != null)
+                    PowerUpManager.Instance.ActivateSpeedBoost();
                 break;
             case PowerUpType.Invincibility:
-                PowerUpManager.Instance.ActivateInvincibility();
+                if (PowerUpManager.Instance != null)
+                    PowerUpManager.Instance.ActivateInvincibility();
                 break;
             case PowerUpType.Combo:
-                PowerUpManager.Instance.ActivateCombo();
+                if (PowerUpManager.Instance != null)
+                    PowerUpManager.Instance.ActivateCombo();
                 break;
             case PowerUpType.AntiGravity:
-                AntiGravityManager.Instance.Activate();
+                if (AntiGravityManager.Instance != null)
+                {
+                    if (AntiGravityManager.Instance.IsAntiGravity)
+                        AntiGravityManager.Instance.ReturnToNormal();
+                    else
+                        AntiGravityManager.Instance.Activate();
+                }
                 break;
         }
+
+        // Play sound before destroying
+        if (pickupSound != null)
+            AudioSource.PlayClipAtPoint(pickupSound, transform.position, pickupVolume);
 
         Destroy(gameObject);
     }

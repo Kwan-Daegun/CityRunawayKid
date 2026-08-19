@@ -14,10 +14,16 @@ public class FlyingObstacle : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        rb.useGravity = false;
-        rb.linearDamping = 2f;
+        if (rb != null)
+        {
+            rb.useGravity = false;
+            rb.linearDamping = 2f;
+        }
 
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null)
+            player = playerObject.transform;
+
         startY = transform.position.y;
     }
 
@@ -37,6 +43,8 @@ public class FlyingObstacle : MonoBehaviour
         
         float targetY = startY + Mathf.Sin(Time.time * frequency) * amplitude;
         Vector3 direction = new Vector3(0f, targetY - transform.position.y, 0f);
+
+        if (rb == null) return;
 
         rb.linearVelocity = new Vector3(
             0f,

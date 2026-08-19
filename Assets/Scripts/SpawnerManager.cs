@@ -15,6 +15,7 @@ public class SpawnerManager : MonoBehaviour
     }
     public void SpawnTriggerEntered()
     {
-        roadSpawner.MoveRoad();
+        if (roadSpawner != null)
+            roadSpawner.MoveRoad();
     }
 }
